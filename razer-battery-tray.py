@@ -71,7 +71,6 @@ app.setQuitOnLastWindowClosed(False)
 
 tray = QSystemTrayIcon()
 menu = QMenu()
-menu.addAction("Refresh", update)
 menu.addAction("Quit", app.quit)
 tray.setContextMenu(menu)
 
