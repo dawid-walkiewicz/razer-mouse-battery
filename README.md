@@ -14,6 +14,8 @@ The icon shows the battery percentage, colored by state:
 
 Hover the icon for the mouse name and exact level. Right-click to **Quit**. The level refreshes every minute.
 
+When the battery drops to 15% or less, you get a desktop notification once, until the mouse is charged again.
+
 ## Requirements
 
 - [OpenRazer](https://openrazer.github.io/)
@@ -26,3 +28,7 @@ Hover the icon for the mouse name and exact level. Right-click to **Quit**. The 
 ```
 
 To start it on login, add the script to your desktop's autostart programs.
+
+## License
+
+[MIT](LICENSE)

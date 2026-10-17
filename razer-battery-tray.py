@@ -6,6 +6,9 @@ from PyQt6.QtCore import QTimer, Qt
 from openrazer.client import DeviceManager
 
 INTERVAL_MS = 60_000  # refresh every minute
+LOW_LEVEL = 15  # warn at or below this percentage
+
+low_warned = False
 
 
 def get_mouse():
@@ -38,6 +41,7 @@ def show_unknown(tooltip):
 
 
 def update():
+    global low_warned
     m = get_mouse()
     if m is None:
         show_unknown("Razer mouse unavailable")
@@ -56,7 +60,7 @@ def update():
         return
     if charging:
         color = "#3daee9"
-    elif lvl <= 15:
+    elif lvl <= LOW_LEVEL:
         color = "#da4453"
     elif lvl <= 35:
         color = "#f67400"
@@ -64,6 +68,17 @@ def update():
         color = "#27ae60"
     tray.setIcon(make_icon(str(lvl), color))
     tray.setToolTip(f"{name}: {lvl}%" + (" (charging)" if charging else ""))
+
+    # notify once per discharge, not on every refresh
+    if charging or lvl > LOW_LEVEL:
+        low_warned = False
+    elif not low_warned:
+        tray.showMessage(
+            "Razer mouse battery low",
+            f"{name}: {lvl}% left",
+            QSystemTrayIcon.MessageIcon.Warning,
+        )
+        low_warned = True
 
 
 app = QApplication(sys.argv)
@@ -74,8 +89,10 @@ menu = QMenu()
 menu.addAction("Quit", app.quit)
 tray.setContextMenu(menu)
 
-update()
+# show() needs an icon, and the first update() may already send a notification
+show_unknown("Razer mouse unavailable")
 tray.show()
+update()
 
 timer = QTimer()
 timer.timeout.connect(update)
