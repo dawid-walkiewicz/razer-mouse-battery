@@ -9,6 +9,7 @@ INTERVAL_MS = 60_000  # refresh every minute
 LOW_LEVEL = 15  # warn at or below this percentage
 
 low_warned = False
+last_level = None  # last real reading, shown while the mouse sleeps
 
 
 def get_mouse():
@@ -41,7 +42,7 @@ def show_unknown(tooltip):
 
 
 def update():
-    global low_warned
+    global low_warned, last_level
     m = get_mouse()
     if m is None:
         show_unknown("Razer mouse unavailable")
@@ -56,8 +57,13 @@ def update():
         return
     # a sleeping or switched-off wireless mouse reports 0% while the dongle stays connected
     if lvl == 0 and not charging:
-        show_unknown(f"{name}: battery level unknown (mouse asleep or off?)")
+        if last_level is None:
+            show_unknown(f"{name}: battery level unknown (mouse asleep or off?)")
+        else:
+            tray.setIcon(make_icon(str(last_level), "#888888"))
+            tray.setToolTip(f"{name}: {last_level}% (asleep, last reading)")
         return
+    last_level = lvl
     if charging:
         color = "#3daee9"
     elif lvl <= LOW_LEVEL:

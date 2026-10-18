@@ -10,7 +10,8 @@ The icon shows the battery percentage, colored by state:
 | red    | 15% or less                                     |
 | orange | 35% or less                                     |
 | green  | above 35%                                       |
-| grey ? | mouse not found, asleep, or daemon not running  |
+| grey   | mouse asleep; shows the last reading            |
+| grey ? | mouse not found, or daemon not running          |
 
 Hover the icon for the mouse name and exact level. Right-click to **Quit**. The level refreshes every minute.
 
