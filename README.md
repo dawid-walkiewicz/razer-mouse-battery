@@ -13,7 +13,9 @@ The icon shows the battery percentage, colored by state:
 | grey   | mouse asleep; shows the last reading            |
 | grey ? | mouse not found, or daemon not running          |
 
-Hover the icon for the mouse name and exact level. Right-click to **Quit**. The level refreshes every minute.
+Hover the icon for the mouse name, exact level, and how long ago it was read (seconds, then minutes after 2 minutes). Right-click to **Quit**. The level refreshes every minute.
+
+While the mouse sleeps, the dongle reports 0%, so the icon keeps showing the last real reading in grey instead.
 
 When the battery drops to 15% or less, you get a desktop notification once, until the mouse is charged again.
 
@@ -28,7 +30,17 @@ When the battery drops to 15% or less, you get a desktop notification once, unti
 ./razer-battery-tray.py
 ```
 
-To start it on login, add the script to your desktop's autostart programs.
+To start it on login, link it into your `PATH` and add it to your desktop's autostart programs.
+
+```sh
+ln -s "$PWD/razer-battery-tray.py" ~/.local/bin/
+```
+
+To restart a running instance after changing the script:
+
+```sh
+pkill -f razer-battery-tray.py; setsid -f razer-battery-tray.py >/dev/null 2>&1
+```
 
 ## License
 

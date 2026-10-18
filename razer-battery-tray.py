@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import time
 from PyQt6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
 from PyQt6.QtGui import QIcon, QPixmap, QPainter, QColor, QFont
 from PyQt6.QtCore import QTimer, Qt
@@ -10,6 +11,8 @@ LOW_LEVEL = 15  # warn at or below this percentage
 
 low_warned = False
 last_level = None  # last real reading, shown while the mouse sleeps
+last_read_at = None  # time.monotonic() of that reading
+tooltip = ("", None)  # (text, reading time to show the age of, or None)
 
 
 def get_mouse():
@@ -36,13 +39,27 @@ def make_icon(text, color):
     return QIcon(pm)
 
 
-def show_unknown(tooltip):
+def set_tooltip(text, read_at=None):
+    global tooltip
+    tooltip = (text, read_at)
+    refresh_tooltip()
+
+
+def refresh_tooltip():
+    text, read_at = tooltip
+    if read_at is not None:
+        age = round(time.monotonic() - read_at)
+        text += f" · updated {age}s ago" if age < 120 else f" · updated {age // 60}m ago"
+    tray.setToolTip(text)
+
+
+def show_unknown(text):
     tray.setIcon(make_icon("?", "#888888"))
-    tray.setToolTip(tooltip)
+    set_tooltip(text)
 
 
 def update():
-    global low_warned, last_level
+    global low_warned, last_level, last_read_at
     m = get_mouse()
     if m is None:
         show_unknown("Razer mouse unavailable")
@@ -61,9 +78,10 @@ def update():
             show_unknown(f"{name}: battery level unknown (mouse asleep or off?)")
         else:
             tray.setIcon(make_icon(str(last_level), "#888888"))
-            tray.setToolTip(f"{name}: {last_level}% (asleep, last reading)")
+            set_tooltip(f"{name}: {last_level}% (asleep, last reading)", last_read_at)
         return
     last_level = lvl
+    last_read_at = time.monotonic()
     if charging:
         color = "#3daee9"
     elif lvl <= LOW_LEVEL:
@@ -73,7 +91,7 @@ def update():
     else:
         color = "#27ae60"
     tray.setIcon(make_icon(str(lvl), color))
-    tray.setToolTip(f"{name}: {lvl}%" + (" (charging)" if charging else ""))
+    set_tooltip(f"{name}: {lvl}%" + (" (charging)" if charging else ""), last_read_at)
 
     # notify once per discharge, not on every refresh
     if charging or lvl > LOW_LEVEL:
@@ -103,5 +121,10 @@ update()
 timer = QTimer()
 timer.timeout.connect(update)
 timer.start(INTERVAL_MS)
+
+# a tray tooltip has no hover event, so keep the age current by rewriting it every second
+tooltip_timer = QTimer()
+tooltip_timer.timeout.connect(refresh_tooltip)
+tooltip_timer.start(1000)
 
 sys.exit(app.exec())
